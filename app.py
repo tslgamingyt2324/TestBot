@@ -3,7 +3,6 @@ import logging
 from flask import Flask, request
 from telegram import Bot, Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 import sqlite3
-from datetime import datetime
 
 # Setup
 logging.basicConfig(level=logging.INFO)
@@ -13,7 +12,7 @@ app = Flask(__name__)
 
 # Config
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-WEBHOOK_URL = os.getenv('WEBHOOK_URL', 'https://your-app-name.onrender.com')
+WEBHOOK_URL = os.getenv('WEBHOOK_URL')
 PORT = int(os.getenv('PORT', 10000))
 
 # Earning settings
@@ -70,7 +69,7 @@ def update_balance(user_id, amount):
 # Flask Routes
 @app.route('/')
 def home():
-    return "🤖 Asterix Earnings Bot is RUNNING! Visit /set_webhook"
+    return "🤖 Asterix Earnings Bot is RUNNING! ✅"
 
 @app.route('/set_webhook', methods=['GET'])
 def set_webhook():
@@ -138,20 +137,20 @@ def show_menu(message):
 def send_welcome(message):
     user = message.from_user
     welcome_text = f"""
-🤖 *Welcome to Asterix Earnings Bot* 💰
+🤖 Welcome to Asterix Earnings Bot 💰
 
-*Hi {user.first_name}!* 👋
+Hi {user.first_name}! 👋
 
 Earn money by watching ads!
 
-💰 *Earn $0.02 per ad*
-💵 *Withdraw from $1.00*
+💰 Earn $0.02 per ad
+💵 Withdraw from $1.00
 
-Click *📺 Watch Ads* to start earning!
+Click 📺 Watch Ads to start earning!
     """
     
     show_menu(message)
-    bot.send_message(user.id, welcome_text, parse_mode='Markdown')
+    bot.send_message(user.id, welcome_text)
 
 def check_balance(message):
     user_id = message.from_user.id
@@ -159,7 +158,7 @@ def check_balance(message):
     
     if user:
         balance_text = f"""
-💼 *Your Balance*
+💼 Your Balance
 
 💰 Available: ${user[3]:.2f}
 🏆 Total Earned: ${user[4]:.2f}
@@ -167,7 +166,7 @@ def check_balance(message):
 
 💡 Minimum withdrawal: ${MIN_WITHDRAWAL}
         """
-        bot.send_message(user_id, balance_text, parse_mode='Markdown')
+        bot.send_message(user_id, balance_text)
     else:
         bot.send_message(user_id, "Please use /start to begin")
 
@@ -175,12 +174,12 @@ def watch_ads(message):
     user_id = message.from_user.id
     
     ad_text = f"""
-🎬 *Watch Ad & Earn ${EARN_PER_AD}*
+🎬 Watch Ad & Earn ${EARN_PER_AD}
 
 Click the button below to open the ad link.
-Watch for 30 seconds, then click *✅ I Watched Complete* to get paid!
+Watch for 30 seconds, then click ✅ I Watched Complete to get paid!
 
-💰 *Earning: ${EARN_PER_AD} per ad*
+💰 Earning: ${EARN_PER_AD} per ad
     """
     
     keyboard = [
@@ -190,7 +189,7 @@ Watch for 30 seconds, then click *✅ I Watched Complete* to get paid!
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
     
-    bot.send_message(user_id, ad_text, reply_markup=reply_markup, parse_mode='Markdown')
+    bot.send_message(user_id, ad_text, reply_markup=reply_markup)
 
 def withdraw(message):
     user_id = message.from_user.id
@@ -218,29 +217,28 @@ def withdraw(message):
     
     bot.send_message(
         user_id,
-        f"💳 *Withdrawal Request*\n💰 Balance: ${user[3]:.2f}\nChoose payment method:",
-        reply_markup=reply_markup,
-        parse_mode='Markdown'
+        f"💳 Withdrawal Request\n💰 Balance: ${user[3]:.2f}\nChoose payment method:",
+        reply_markup=reply_markup
     )
 
 def send_instructions(message):
     instructions = """
-📋 *How to Earn Money:*
+📋 How to Earn Money:
 
-1. Click *📺 Watch Ads*
+1. Click 📺 Watch Ads
 2. Click the ad link button
 3. Watch the ad page
-4. Click *✅ I Watched Complete*
-5. Get *$0.02* automatically!
+4. Click ✅ I Watched Complete
+5. Get $0.02 automatically!
 
-💰 *Withdrawal Info:*
+💰 Withdrawal Info:
 - Minimum: $1.00
 - Methods: bKash, Nagad, Rocket, PayPal
 - Processing: 24-48 hours
 
 Start earning now! 🚀
     """
-    bot.send_message(message.from_user.id, instructions, parse_mode='Markdown')
+    bot.send_message(message.from_user.id, instructions)
 
 def handle_callback(query):
     try:
@@ -252,7 +250,7 @@ def handle_callback(query):
             user = get_user(user_id)
             
             success_text = f"""
-✅ *Payment Credited!* 🎉
+✅ Payment Credited! 🎉
 
 💰 Earned: ${EARN_PER_AD}
 📊 New Balance: ${user[3]:.2f}
@@ -263,8 +261,7 @@ Keep watching to earn more! 💰
             bot.edit_message_text(
                 success_text,
                 chat_id=user_id,
-                message_id=query.message.message_id,
-                parse_mode='Markdown'
+                message_id=query.message.message_id
             )
             
         elif data == "cancel_ad":
@@ -278,10 +275,9 @@ Keep watching to earn more! 💰
             method = data.replace("withdraw_", "")
             user = get_user(user_id)
             bot.edit_message_text(
-                f"📋 *Withdrawal Instructions*\n\nSend this message:\n`/{method} {user[3]:.2f} YOUR_ACCOUNT_NUMBER`\n\nWe'll process within 24 hours!",
+                f"📋 Withdrawal Instructions\n\nSend this message:\n/{method} {user[3]:.2f} YOUR_ACCOUNT_NUMBER\n\nWe'll process within 24 hours!",
                 chat_id=user_id,
-                message_id=query.message.message_id,
-                parse_mode='Markdown'
+                message_id=query.message.message_id
             )
             
         elif data == "cancel_withdraw":
